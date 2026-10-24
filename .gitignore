@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+service-account.json
+*-adminsdk-*.json
+*.pem
+.DS_Store
