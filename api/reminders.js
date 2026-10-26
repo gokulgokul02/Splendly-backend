@@ -88,10 +88,11 @@ export default async function handler(req, res) {
             android: {
               priority: 'high',
               notification: {
-                channelId: 'splendly_alerts_v2',
+                channelId: 'splendly_alerts_v3',
                 sound: 'coinsound',
-                defaultSound: true,
                 defaultVibrateTimings: true,
+                notificationPriority: 'PRIORITY_MAX',
+                visibility: 'PUBLIC',
               },
             },
           };
