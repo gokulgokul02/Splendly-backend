@@ -96,7 +96,7 @@ export default async function handler(req, res) {
             const voiceText = isIncome
               ? `${userName} added ${parsedAmount} rupees`
               : `${userName} spent ${parsedAmount} rupees`;
-            const notifTitle = `Kudumbam-Pay: ₹${parsedAmount} ${typeText} 💸`;
+            const notifTitle = `SPLENDLY: ₹${parsedAmount} ${typeText} 💸`;
             const notifBody = `${userName} added ₹${parsedAmount} ${typeText} for ${note || category}`;
 
             const messagePayload = {

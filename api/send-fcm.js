@@ -19,8 +19,8 @@ export default async function handler(req, res) {
       targetType = 'broadcast', // 'token' | 'user' | 'family' | 'broadcast'
       targetId,
       fcmToken,
-      title = 'Kudumbam-Pay Notification',
-      body = 'New update from Kudumbam-Pay',
+      title = 'SPLENDLY Notification',
+      body = 'New update from SPLENDLY',
       voiceText = '',
       txType = 'DEBIT',
       amount = '0',

@@ -31,7 +31,7 @@ export default function App() {
   // FCM Form State
   const [fcmTargetType, setFcmTargetType] = useState('broadcast');
   const [fcmTargetId, setFcmTargetId] = useState('');
-  const [fcmTitle, setFcmTitle] = useState('Kudumbam-Pay Alert: ₹500 Spent 💸');
+  const [fcmTitle, setFcmTitle] = useState('SPLENDLY Alert: ₹500 Spent 💸');
   const [fcmBody, setFcmBody] = useState('Gokul spent ₹500 for Groceries');
   const [fcmVoiceText, setFcmVoiceText] = useState('Gokul spent 500 rupees for Groceries');
   const [fcmAmount, setFcmAmount] = useState('500');
