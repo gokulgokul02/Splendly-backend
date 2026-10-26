@@ -32,20 +32,23 @@ export default async function handler(req, res) {
     if (targetType === 'token' && fcmToken) {
       tokens = [fcmToken];
     } else if (targetType === 'user' && targetId) {
+      const userDoc = await db.collection('users').doc(targetId).get();
+      if (userDoc.exists && userDoc.data().fcmToken) {
+        tokens.push(userDoc.data().fcmToken);
+      }
       const doc = await db.collection('fcm_tokens').doc(targetId).get();
       if (doc.exists && doc.data().token) {
         tokens.push(doc.data().token);
-      } else {
-        const userDoc = await db.collection('users').doc(targetId).get();
-        if (userDoc.exists && userDoc.data().fcmToken) {
-          tokens.push(userDoc.data().fcmToken);
-        }
       }
     } else if (targetType === 'family' && targetId) {
       const famDoc = await db.collection('families').doc(targetId).get();
       if (famDoc.exists) {
         const members = famDoc.data().members || [];
         for (const uid of members) {
+          const uDoc = await db.collection('users').doc(uid).get();
+          if (uDoc.exists && uDoc.data().fcmToken) {
+            tokens.push(uDoc.data().fcmToken);
+          }
           const tDoc = await db.collection('fcm_tokens').doc(uid).get();
           if (tDoc.exists && tDoc.data().token) {
             tokens.push(tDoc.data().token);
@@ -53,14 +56,14 @@ export default async function handler(req, res) {
         }
       }
     } else {
-      // Broadcast to all active tokens in system
-      const allTokensSnap = await db.collection('fcm_tokens').get();
-      tokens = allTokensSnap.docs.map((d) => d.data().token).filter(Boolean);
+      // Broadcast: collect from both users (always has latest token) and fcm_tokens
+      const usersSnap = await db.collection('users').get();
+      const userTokens = usersSnap.docs.map((d) => d.data().fcmToken).filter(Boolean);
 
-      if (tokens.length === 0) {
-        const usersSnap = await db.collection('users').get();
-        tokens = usersSnap.docs.map((d) => d.data().fcmToken).filter(Boolean);
-      }
+      const allTokensSnap = await db.collection('fcm_tokens').get();
+      const fcmTokens = allTokensSnap.docs.map((d) => d.data().token).filter(Boolean);
+
+      tokens = [...userTokens, ...fcmTokens];
     }
 
     tokens = Array.from(new Set(tokens));
