@@ -47,7 +47,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, message: 'toUserId and message are required' });
       }
 
-      const reminderRef = db.collection('reminders').doc();
+      const reminderRef = data.id ? db.collection('reminders').doc(data.id) : db.collection('reminders').doc();
       const reminderData = {
         id: reminderRef.id,
         toUserId,
@@ -59,26 +59,29 @@ export default async function handler(req, res) {
       };
 
       // 1. Save to Firestore
-      await reminderRef.set(reminderData);
+      await reminderRef.set(reminderData, { merge: true });
 
       // 2. Dispatch FCM Push Notification using Firebase Admin SDK
       let fcmSent = false;
       try {
         const tokenDoc = await db.collection('fcm_tokens').doc(toUserId).get();
         const userDoc = await db.collection('users').doc(toUserId).get();
-        const token = tokenDoc.exists ? tokenDoc.data().token : (userDoc.exists ? userDoc.data().fcmToken : null);
+        const token = tokenDoc.exists && tokenDoc.data().token ? tokenDoc.data().token : (userDoc.exists ? userDoc.data().fcmToken : null);
 
         if (token) {
+          const notifTitle = `Family Reminder from ${fromName} 🔔`;
           const payload = {
             token,
             notification: {
-              title: `Family Reminder from ${fromName} 🔔`,
+              title: notifTitle,
               body: message,
             },
             data: {
               type: 'REMINDER',
               fromName: String(fromName),
               message: String(message),
+              title: String(notifTitle),
+              body: String(message),
               voiceText: `Reminder from ${fromName}: ${message}`,
               timestamp: new Date().toISOString(),
             },
@@ -87,6 +90,8 @@ export default async function handler(req, res) {
               notification: {
                 channelId: 'splendly_alerts_v2',
                 sound: 'coinsound',
+                defaultSound: true,
+                defaultVibrateTimings: true,
               },
             },
           };

@@ -83,6 +83,11 @@ export default async function handler(req, res) {
             const tokenDoc = await db.collection('fcm_tokens').doc(recipientId).get();
             if (tokenDoc.exists && tokenDoc.data().token) {
               tokens.push(tokenDoc.data().token);
+            } else {
+              const userDoc = await db.collection('users').doc(recipientId).get();
+              if (userDoc.exists && userDoc.data().fcmToken) {
+                tokens.push(userDoc.data().fcmToken);
+              }
             }
           }
 
@@ -91,11 +96,13 @@ export default async function handler(req, res) {
             const voiceText = isIncome
               ? `${userName} added ${parsedAmount} rupees`
               : `${userName} spent ${parsedAmount} rupees`;
+            const notifTitle = `Kudumbam-Pay: ₹${parsedAmount} ${typeText} 💸`;
+            const notifBody = `${userName} added ₹${parsedAmount} ${typeText} for ${note || category}`;
 
             const messagePayload = {
               notification: {
-                title: `Kudumbam-Pay: ₹${parsedAmount} ${typeText} 💸`,
-                body: `${userName} added ₹${parsedAmount} ${typeText} for ${note || category}`,
+                title: notifTitle,
+                body: notifBody,
               },
               data: {
                 type: 'TRANSACTION',
@@ -105,6 +112,9 @@ export default async function handler(req, res) {
                 note: String(note),
                 category: String(category),
                 voiceText: String(voiceText),
+                title: String(notifTitle),
+                body: String(notifBody),
+                message: String(notifBody),
                 timestamp: new Date().toISOString(),
               },
               android: {
@@ -112,6 +122,8 @@ export default async function handler(req, res) {
                 notification: {
                   channelId: 'splendly_alerts_v2',
                   sound: 'coinsound',
+                  defaultSound: true,
+                  defaultVibrateTimings: true,
                 },
               },
               tokens: Array.from(new Set(tokens)),
@@ -119,6 +131,8 @@ export default async function handler(req, res) {
 
             const sendRes = await messaging.sendEachForMulticast(messagePayload);
             console.log(`🔔 FCM Broadcast: ${sendRes.successCount} sent, ${sendRes.failureCount} failed.`);
+          } else {
+            console.warn('⚠️ No FCM tokens found for recipients:', recipientIds);
           }
         }
       } catch (fcmError) {
